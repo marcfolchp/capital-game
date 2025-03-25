@@ -506,7 +506,6 @@ def game_page():
 
 
 # Register page
-# Register page
 def register_page():
     st.title("Register")
     new_username = st.text_input("New Username")
@@ -530,48 +529,36 @@ def register_page():
             save_users()
             st.success("Registration successful! Redirecting to login...")
 
-            time.sleep(2)  # Brief pause for user feedback
-            st.session_state.page = "login"
-            st.experimental_rerun()
+            st.session_state.page = "login"  # Redirect user to login page
 
-# Login page
 # Login page
 def login_page():
     st.title("Login")
-    username = st.text_input("Username").strip()
-    password = st.text_input("Password", type="password").strip()
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
 
-    col1, col2 = st.columns(2)
-
-    if col1.button("Login"):
-        users_df = st.session_state.users_df
-
-        # Ensure correct data types and strip potential whitespace
-        users_df["username"] = users_df["username"].astype(str).str.strip()
-        users_df["password"] = users_df["password"].astype(str).str.strip()
-
-        user_exists = users_df[users_df["username"] == username]
-
-        if not user_exists.empty and user_exists.iloc[0]["password"] == password:
+    if st.button("Login"):
+        user_exists = st.session_state.users_df[st.session_state.users_df["username"] == username]
+        if not user_exists.empty and user_exists["password"].iloc[0] == password:
             st.session_state.logged_in_user = username
-            st.session_state.page = "game"  # Redirect to game page
-            st.experimental_rerun()  # Ensure proper re-render
+            st.session_state.page = "game"  # Set page to game
         else:
             st.error("Invalid username or password")
 
-    if col2.button("Register"):
-        st.session_state.page = "register"
-        st.experimental_rerun()
-
-
 # Main app flow
 def main():
+    # Ensure session state variables exist
+    if "page" not in st.session_state:
+        st.session_state.page = "login"  # Default page
+    if "logged_in_user" not in st.session_state:
+        st.session_state.logged_in_user = None  # No user logged in
+
+    # Route to the correct page
     if st.session_state.page == "login":
         login_page()
     elif st.session_state.page == "register":
         register_page()
     elif st.session_state.page == "game" and st.session_state.logged_in_user:
-        # Display game page
         st.sidebar.title(f"Hello, {st.session_state.logged_in_user}!")
         menu = ["Questions", "Leaderboard"]
         page = st.sidebar.radio("Select Page", menu)
@@ -580,6 +567,8 @@ def main():
             game_page()
         elif page == "Leaderboard":
             leaderboard()
+
+
 
 if __name__ == "__main__":
     main()
